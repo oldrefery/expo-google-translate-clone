@@ -1,9 +1,18 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { Stack } from 'expo-router';
-import { Text, TextInput, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, Text, TextInput, View } from 'react-native';
 
 export default function Home() {
+  const [input, setInput] = useState<string>('');
+  const [output, setOutput] = useState<string>('');
+
+  const handleTranslate = () => {
+    console.log('handleTranslate');
+    setOutput(input);
+  };
+
   return (
     <>
       <Stack.Screen options={{ title: 'Home' }} />
@@ -23,23 +32,29 @@ export default function Home() {
             className="min-h-32 flex-1 text-xl"
             multiline
             maxLength={5000}
+            onChangeText={setInput}
+            value={input}
           />
-          <FontAwesome5 name="arrow-circle-right" size={24} color="blue" />
+          <Pressable onPress={handleTranslate}>
+            <FontAwesome5 name="arrow-circle-right" size={24} color="blue" />
+          </Pressable>
         </View>
         <View className="flex-row justify-between">
           <FontAwesome name="microphone" size={18} color="darkgrey" />
-          <Text className="color-gray-500">0 / 5000</Text>
+          <Text className="color-gray-500">{input.length} / 5000</Text>
         </View>
       </View>
 
       {/* Output container*/}
-      <View className="gap-5 bg-gray-300 p-5">
-        <Text className="min-h-32 text-xl">Output</Text>
-        <View className="flex-row justify-between">
-          <FontAwesome name="volume-up" size={18} color="darkgrey" />
-          <FontAwesome name="copy" size={18} color="darkgrey" />
+      {output && (
+        <View className="gap-5 bg-gray-200 p-5">
+          <Text className="min-h-32 text-xl">{output}</Text>
+          <View className="flex-row justify-between">
+            <FontAwesome name="volume-up" size={18} color="darkgrey" />
+            <FontAwesome name="copy" size={18} color="darkgrey" />
+          </View>
         </View>
-      </View>
+      )}
     </>
   );
 }
