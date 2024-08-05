@@ -4,13 +4,16 @@ import { Stack } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 
+import { translate } from '~/utils/translate';
+
 export default function Home() {
   const [input, setInput] = useState<string>('');
   const [output, setOutput] = useState<string>('');
 
-  const handleTranslate = () => {
-    console.log('handleTranslate');
-    setOutput(input);
+  const handleTranslate = async () => {
+    const translation = await translate(input);
+
+    setOutput(translation);
   };
 
   return (
