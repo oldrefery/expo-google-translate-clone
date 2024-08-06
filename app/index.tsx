@@ -1,59 +1,17 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
-import { Audio } from 'expo-av';
 import { Stack } from 'expo-router';
 import { useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 
+import { useRecording } from '~/utils/recording';
 import { textToSpeech } from '~/utils/text-to-speech';
 import { translate } from '~/utils/translate';
-import { speechToText } from '~/utils/speech-to-text';
 
 export default function Home() {
   const [input, setInput] = useState<string>('');
   const [output, setOutput] = useState<string>('');
-  const [permissionResponse, requestPermission] = Audio.usePermissions();
-  const [recording, setRecording] = useState<Audio.Recording>();
-
-  async function startRecording() {
-    try {
-      if (permissionResponse?.status !== 'granted') {
-        console.log('Requesting permission..');
-        await requestPermission();
-      }
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
-      });
-
-      console.log('Starting recording..');
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY
-      );
-      setRecording(recording);
-      console.log('Recording started');
-    } catch (err) {
-      console.error('Failed to start recording', err);
-    }
-  }
-
-  async function stopRecording() {
-    if (!recording) {
-      return;
-    }
-
-    console.log('Stopping recording..');
-    setRecording(undefined);
-    await recording.stopAndUnloadAsync();
-    await Audio.setAudioModeAsync({
-      allowsRecordingIOS: false,
-    });
-    const uri = recording.getURI();
-    console.log('Recording stopped and stored at', uri);
-
-    const response = await speechToText(uri);
-    setInput(response.text);
-  }
+  const { recording, startRecording, stopRecording } = useRecording(setInput);
 
   const handleTranslate = async () => {
     const translation = await translate(input);
@@ -62,14 +20,7 @@ export default function Home() {
   };
 
   const handleReadOut = async () => {
-    const data = await textToSpeech(output);
-
-    if (data) {
-      const { sound } = await Audio.Sound.createAsync({
-        uri: `data:audio/mp3;base64,${data.mp3Base64}`,
-      });
-      sound.playAsync();
-    }
+    await textToSpeech(output);
   };
 
   return (

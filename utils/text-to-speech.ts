@@ -1,3 +1,5 @@
+import { Audio } from 'expo-av';
+
 import { supabase } from '~/utils/supabase';
 
 export const textToSpeech = async (text: string) => {
@@ -9,5 +11,10 @@ export const textToSpeech = async (text: string) => {
     console.error(error);
   }
 
-  return data;
+  if (data) {
+    const { sound } = await Audio.Sound.createAsync({
+      uri: `data:audio/mp3;base64,${data.mp3Base64}`,
+    });
+    sound.playAsync();
+  }
 };
