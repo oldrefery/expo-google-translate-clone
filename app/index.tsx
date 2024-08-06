@@ -29,10 +29,11 @@ export default function Home() {
       await startRecording();
     } else {
       const uri = await stopRecording();
+      console.log('stopRecording', uri);
 
       if (uri) {
         const response = await speechToText(uri);
-        setInput(response.text);
+        setInput(response?.text || 'speechToText has a problem');
       }
     }
   };
