@@ -5,13 +5,14 @@ import { useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 
 import { useRecording } from '~/utils/recording';
+import { speechToText } from '~/utils/speech-to-text';
 import { textToSpeech } from '~/utils/text-to-speech';
 import { translate } from '~/utils/translate';
 
 export default function Home() {
   const [input, setInput] = useState<string>('');
   const [output, setOutput] = useState<string>('');
-  const { recording, startRecording, stopRecording } = useRecording(setInput);
+  const { recording, startRecording, stopRecording } = useRecording();
 
   const handleTranslate = async () => {
     const translation = await translate(input);
@@ -21,6 +22,19 @@ export default function Home() {
 
   const handleReadOut = async () => {
     await textToSpeech(output);
+  };
+
+  const handleRecord = async () => {
+    if (!recording) {
+      await startRecording();
+    } else {
+      const uri = await stopRecording();
+
+      if (uri) {
+        const response = await speechToText(uri);
+        setInput(response.text);
+      }
+    }
   };
 
   return (
@@ -53,11 +67,12 @@ export default function Home() {
           />
         </View>
         <View className="flex-row justify-between">
-          {recording ? (
-            <FontAwesome name="stop-circle" size={18} color="darkgrey" onPress={stopRecording} />
-          ) : (
-            <FontAwesome name="microphone" size={18} color="darkgrey" onPress={startRecording} />
-          )}
+          <FontAwesome
+            name={recording ? 'stop-circle' : 'microphone'}
+            size={18}
+            color="darkgrey"
+            onPress={handleRecord}
+          />
           <Text className="color-gray-500">{input.length} / 5000</Text>
         </View>
       </View>

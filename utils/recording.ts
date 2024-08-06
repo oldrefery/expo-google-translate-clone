@@ -1,9 +1,7 @@
 import { Audio } from 'expo-av';
-import React, { useState } from 'react';
+import { useState } from 'react';
 
-import { speechToText } from '~/utils/speech-to-text';
-
-export const useRecording = (setInput: React.Dispatch<React.SetStateAction<string>>) => {
+export const useRecording = () => {
   const [permissionResponse, requestPermission] = Audio.usePermissions();
   const [recording, setRecording] = useState<Audio.Recording>();
 
@@ -43,8 +41,7 @@ export const useRecording = (setInput: React.Dispatch<React.SetStateAction<strin
     const uri = recording.getURI();
     console.log('Recording stopped and stored at', uri);
 
-    const response = await speechToText(uri);
-    setInput(response.text);
+    return uri;
   }
 
   return { recording, startRecording, stopRecording };
