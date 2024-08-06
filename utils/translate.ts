@@ -1,11 +1,11 @@
 import { supabase } from '~/utils/supabase';
 
-export const translate = async (text: string) => {
+export const translate = async (input: string, from: string, to: string) => {
   const { data, error } = await supabase.functions.invoke('translate', {
     body: JSON.stringify({
-      input: text,
-      from: 'English',
-      to: 'Dutch',
+      input,
+      from,
+      to,
     }),
   });
 

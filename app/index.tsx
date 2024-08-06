@@ -2,8 +2,9 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { Stack } from 'expo-router';
 import { useState } from 'react';
-import { Text, TextInput, View } from 'react-native';
+import { FlatList, Text, TextInput, View } from 'react-native';
 
+import { languages } from '~/assets/languages';
 import { useRecording } from '~/utils/recording';
 import { speechToText } from '~/utils/speech-to-text';
 import { textToSpeech } from '~/utils/text-to-speech';
@@ -13,9 +14,12 @@ export default function Home() {
   const [input, setInput] = useState<string>('');
   const [output, setOutput] = useState<string>('');
   const { recording, startRecording, stopRecording } = useRecording();
+  const [languageFrom, setLanguageFrom] = useState('English');
+  const [languageTo, setLanguageTo] = useState('Dutch');
+  const [selectLanguageMode, setSelectLanguageMode] = useState<'source' | 'target' | null>(null);
 
   const handleTranslate = async () => {
-    const translation = await translate(input);
+    const translation = await translate(input, languageFrom, languageTo);
 
     setOutput(translation);
   };
@@ -34,9 +38,39 @@ export default function Home() {
       if (uri) {
         const response = await speechToText(uri);
         setInput(response?.text || 'speechToText has a problem');
+
+        const translation = await translate(response?.text, languageFrom, languageTo);
+        setOutput(translation);
       }
     }
   };
+
+  const handleSwapLanguages = async () => {
+    setLanguageFrom(languageTo);
+    setLanguageTo(languageFrom);
+  };
+
+  if (selectLanguageMode) {
+    return (
+      <FlatList
+        data={languages}
+        renderItem={({ item }) => (
+          <Text
+            onPress={() => {
+              if (selectLanguageMode === 'source') {
+                setLanguageFrom(item.name);
+              } else {
+                setLanguageTo(item.name);
+              }
+              setSelectLanguageMode(null);
+            }}
+            className="p-2 px-5">
+            {item.name}
+          </Text>
+        )}
+      />
+    );
+  }
 
   return (
     <View className="mx-auto w-full max-w-xl">
@@ -44,9 +78,17 @@ export default function Home() {
 
       {/*Language selectors*/}
       <View className="flex-row justify-around p-5">
-        <Text className="font-semibold color-blue-600">English</Text>
-        <FontAwesome name="exchange" size={18} color="grey" />
-        <Text className="font-semibold color-blue-600">Dutch</Text>
+        <Text
+          onPress={() => setSelectLanguageMode('source')}
+          className="font-semibold color-blue-600">
+          {languageFrom}
+        </Text>
+        <FontAwesome name="exchange" size={18} color="grey" onPress={handleSwapLanguages} />
+        <Text
+          onPress={() => setSelectLanguageMode('target')}
+          className="font-semibold color-blue-600">
+          {languageTo}
+        </Text>
       </View>
 
       {/*Input container*/}

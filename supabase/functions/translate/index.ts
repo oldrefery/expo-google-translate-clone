@@ -14,7 +14,6 @@ Deno.serve(async (req) => {
 
   try {
     const { input, from, to } = await req.json();
-    console.log({ input, from, to });
 
     const completion = await openai.chat.completions.create({
       messages: [
