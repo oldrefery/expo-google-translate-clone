@@ -1,9 +1,11 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import { Audio } from 'expo-av';
 import { Stack } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 
+import { textToSpeech } from '~/utils/text-to-speech';
 import { translate } from '~/utils/translate';
 
 export default function Home() {
@@ -14,6 +16,17 @@ export default function Home() {
     const translation = await translate(input);
 
     setOutput(translation);
+  };
+
+  const handleReadOut = async () => {
+    const data = await textToSpeech(output);
+
+    if (data) {
+      const { sound } = await Audio.Sound.createAsync({
+        uri: `data:audio/mp3;base64,${data.mp3Base64}`,
+      });
+      sound.playAsync();
+    }
   };
 
   return (
@@ -53,7 +66,7 @@ export default function Home() {
         <View className="gap-5 bg-gray-200 p-5">
           <Text className="min-h-32 text-xl">{output}</Text>
           <View className="flex-row justify-between">
-            <FontAwesome name="volume-up" size={18} color="darkgrey" />
+            <FontAwesome name="volume-up" size={18} color="darkgrey" onPress={handleReadOut} />
             <FontAwesome name="copy" size={18} color="darkgrey" />
           </View>
         </View>
