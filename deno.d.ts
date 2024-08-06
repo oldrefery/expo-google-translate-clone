@@ -14,6 +14,11 @@ declare module 'npm:openai' {
         }>;
       };
     };
+    chat: {
+      completions: {
+        create(params: any): Promise<any>;
+      };
+    };
   }
   export function toFile(buffer: Uint8Array, name: string, options: { type: string }): Promise<any>;
 }
