@@ -3,14 +3,57 @@ import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { Audio } from 'expo-av';
 import { Stack } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
+import { Text, TextInput, View } from 'react-native';
 
 import { textToSpeech } from '~/utils/text-to-speech';
 import { translate } from '~/utils/translate';
+import { speechToText } from '~/utils/speech-to-text';
 
 export default function Home() {
   const [input, setInput] = useState<string>('');
   const [output, setOutput] = useState<string>('');
+  const [permissionResponse, requestPermission] = Audio.usePermissions();
+  const [recording, setRecording] = useState<Audio.Recording>();
+
+  async function startRecording() {
+    try {
+      if (permissionResponse?.status !== 'granted') {
+        console.log('Requesting permission..');
+        await requestPermission();
+      }
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+
+      console.log('Starting recording..');
+      const { recording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      );
+      setRecording(recording);
+      console.log('Recording started');
+    } catch (err) {
+      console.error('Failed to start recording', err);
+    }
+  }
+
+  async function stopRecording() {
+    if (!recording) {
+      return;
+    }
+
+    console.log('Stopping recording..');
+    setRecording(undefined);
+    await recording.stopAndUnloadAsync();
+    await Audio.setAudioModeAsync({
+      allowsRecordingIOS: false,
+    });
+    const uri = recording.getURI();
+    console.log('Recording stopped and stored at', uri);
+
+    const response = await speechToText(uri);
+    setInput(response.text);
+  }
 
   const handleTranslate = async () => {
     const translation = await translate(input);
@@ -51,12 +94,19 @@ export default function Home() {
             onChangeText={setInput}
             value={input}
           />
-          <Pressable onPress={handleTranslate}>
-            <FontAwesome5 name="arrow-circle-right" size={24} color="blue" />
-          </Pressable>
+          <FontAwesome5
+            name="arrow-circle-right"
+            size={24}
+            color="blue"
+            onPress={handleTranslate}
+          />
         </View>
         <View className="flex-row justify-between">
-          <FontAwesome name="microphone" size={18} color="darkgrey" />
+          {recording ? (
+            <FontAwesome name="stop-circle" size={18} color="darkgrey" onPress={stopRecording} />
+          ) : (
+            <FontAwesome name="microphone" size={18} color="darkgrey" onPress={startRecording} />
+          )}
           <Text className="color-gray-500">{input.length} / 5000</Text>
         </View>
       </View>
